@@ -74,7 +74,8 @@ contract freelancer{
     event taskStarted(int256 scheduleID);
     event taskApproved(int256 scheduleID);
     event fundsReleased(int256 scheduleID, uint256 valueReleased);
-
+    event projectEnded();
+    
     constructor()
     {
         freelancerAddress = payable(msg.sender);
@@ -155,6 +156,7 @@ contract freelancer{
         noMoreFunds
     {
         projectState = ProjectState.closed;
+        emit projectEnded();
     }
     
     function getBalance()
