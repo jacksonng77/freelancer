@@ -19,14 +19,10 @@ module.exports = {
   output: {
     filename: "index.js",
     path: path.resolve(__dirname, "dist"),
-    publicPath: "/freelancer/",
+    //publicPath: "/freelancer/",
   },
   plugins: [
     new CopyWebpackPlugin([{ from: "./src/index.html", to: "index.html" }]),
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      jQuery: "jquery"
-    }),
   ],
   devServer: { contentBase: path.join(__dirname, "dist"), compress: true },
 };
