@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>MetaCoin | Truffle Webpack Demo w/ Frontend</title>
+    <title>Freelancer Smart Contract - Programmer</title>
   </head>
   <style>
     input {
@@ -10,28 +10,17 @@
     }
   </style>
   <body>
-    <h1>MetaCoin — Example Truffle Dapp</h1>
-    <p>You have <strong class="balance">loading...</strong> META</p>
 
-    <h1>Send MetaCoin</h1>
+    <div class="p-5 mb-4 bg-light rounded-3">
+      <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Freelancer Smart Contract - Programmer</h1>
+        <p class="col-md-8 fs-4">The programmer uses this DApp to manage the Freelancer Smart Contract</p>
+        <button class="btn btn-primary btn-lg" onclick="App.deployFreelancer()" type="button" id="btn-Deploy">Deploy</button>
+        <div class="spinner-border spinner-border-sm d-none" role="status" id="spn-load">
+          <span class="sr-only"></span>
+        </div>
+      </div>
 
-    <label for="amount">Amount:</label>
-    <input type="text" id="amount" placeholder="e.g. 95" />
-
-    <label for="receiver">To address:</label>
-    <input
-      type="text"
-      id="receiver"
-      placeholder="e.g. 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"
-    />
-
-    <button onclick="App.sendCoin()">Send MetaCoin</button>
-
-    <p id="status"></p>
-    <p>
-      <strong>Hint:</strong> open the browser developer console to view any
-      errors and warnings.
-    </p>
     <script src="index.js"></script>
   </body>
 </html>

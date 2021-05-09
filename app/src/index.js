@@ -1,31 +1,45 @@
 import Web3 from "web3";
-import metaCoinArtifact from "../../build/contracts/freelancer.json";
+import freelancerArtifact from "../../build/contracts/freelancer.json";
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = {
   web3: null,
   account: null,
   meta: null,
+  freelancerContractAddress:null,
+  freelancerContract:null,
 
   start: async function() {
     const { web3 } = this;
+    //get accounts
+    const accounts = await web3.eth.getAccounts();
+    this.account = accounts[0];
+  },
 
-    try {
-      // get contract instance
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = metaCoinArtifact.networks[networkId];
-      this.meta = new web3.eth.Contract(
-        metaCoinArtifact.abi,
-        deployedNetwork.address,
-      );
-
-      // get accounts
-      const accounts = await web3.eth.getAccounts();
-      this.account = accounts[0];
-
-      this.refreshBalance();
-    } catch (error) {
-      console.error("Could not connect to contract or chain.");
-    }
+  deployFreelancer: async function() {
+    const { web3 } = this;
+    this.freelancerContract = new web3.eth.Contract(freelancerArtifact.abi);
+    $("#spn-load").removeClass('d-none');;
+    this.freelancerContract.deploy({
+      data: freelancerArtifact.bytecode,
+      arguments: []
+    }).send({
+      from: this.account, 
+    }, (error, transactionHash) => {})
+    .on('error', (error) => { 
+      console.log("error");            
+    })
+    .on('receipt', (receipt) => {
+      console.log("DONE" + receipt.contractAddress); // contains the new contract address
+      $("#spn-load").addClass('d-none');
+      //load the deployed contract 
+      this.freelanceContractAddress = receipt.contractAddress;
+      this.freelancerContract = new web3.eth.Contract(freelancerArtifact.abi, this.freelanceContractAddress);
+      this.freelancerContract.methods.freelancerAddress().call().then((result) => {
+        console.log(result);  
+      });
+    })
   },
 
   refreshBalance: async function() {

@@ -5,15 +5,23 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.0.5",
+    "css-loader": "^5.2.4",
+    "postcss": "^8.2.14",
+    "postcss-loader": "^5.2.0",
+    "style-loader": "^2.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.9.0"
   },
   "dependencies": {
+    "@popperjs/core": "^2.9.2",
+    "bootstrap": "^5.0.0",
+    "jquery": "^3.6.0",
     "web3": "^1.2.4"
   }
 }
