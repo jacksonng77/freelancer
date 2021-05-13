@@ -15,12 +15,18 @@ const App = {
 
   //ui declarations
   uiSpnLoad:null,
+  uiSpnAddSchedule: null,
   uiConContract:null,
   uiLblContractAddress:null,
   uiLblFreelancerAddress:null,
   uiTxtContractAddress:null,
   uiLblProjectState:null,
   scheduleModal: null,
+  uiTxtShortCode: null,
+  uiTxtScheduleDescription: null,
+  uiTxtScheduleValue: null,
+  uiTblScheduleTable: null,
+  uiTblScheduleTableBody: null,
 
   start: async function() {
     const { web3 } = this;
@@ -36,40 +42,145 @@ const App = {
       this.deployFreelancer();
     }
     else {
-      console.log("something");
+      this.retrieveFreelancer(this.uiTxtContractAddress);
     }
   },
 
+  btnGoClient: function(){
+    this.uiTxtContractAddress = document.getElementById("txt-contract-address").value;
+    this.retrieveFreelancer(this.uiTxtContractAddress);
+  },
+
   btnAddSchedule: function(){
-    console.log("OK ADD");
-    this.scheduleModal = Modal.getInstance(document.getElementById('scheduleModal'));
-    this.scheduleModal.hide();
+    if (document.getElementById("Schedule-Form").checkValidity()){
+      this.uiTxtShortCode = document.getElementById("txt-short-code").value;
+      this.uiTxtScheduleDescription = document.getElementById("txt-schedule-description").value;
+      this.uiTxtScheduleValue = document.getElementById("txt-schedule-value").value;
+      this.uiSpnAddSchedule = document.getElementById("spn-add-schedule")
+      this.uiSpnAddSchedule.classList.remove('d-none');
+      this.freelancerContract.methods.addSchedule(this.uiTxtShortCode, this.uiTxtScheduleDescription, App.web3.utils.toWei(this.uiTxtScheduleValue, 'ether')).send({from: this.account}).then((result) =>{
+        this.uiTblScheduleTable = document.getElementById("tbl-schedule-table");
+        this.uiTblScheduleTable.classList.remove('d-none');  
+        this.uiSpnAddSchedule.classList.add('d-none');
+        this.scheduleModal = Modal.getInstance(document.getElementById('scheduleModal'));
+        this.utilAddScheduleToTable(this.uiTxtShortCode, this.uiTxtScheduleDescription, App.web3.utils.toWei(this.uiTxtScheduleValue, 'ether'), 0);
+        this.scheduleModal.hide();
+      });
+    }
+    else{
+      console.log("nope");
+    }
+  },
+
+  utilScheduleState: function(stateCode){
+    //planned, funded, started, approved, released
+    switch(stateCode){
+      case 0:
+        return "<span class='badge bg-primary'>Planned</span>";
+      case 1:
+        return "<span class='badge bg-success'>Funded</span>";
+      case 2:
+        return "<span class='badge bg-warning'>Started</span>";
+      case 3:
+        return "<span class='badge bg-info'>Approved</span>";
+      case 4:       
+        return "<span class='badge bg-light'>Released</span>";
+    }
   },
 
   utilProjectStatus: function(statusCode){
+    //initiated, accepted, closed
     this.uiLblProjectState = document.getElementById("lbl-project-status");
     switch(statusCode){
       case 0:
         this.uiLblProjectState.classList.add('bg-primary');
-        this.uiLblProjectState.textContent = "Planned";
+        this.uiLblProjectState.textContent = "Initiated";
         break;
       case 1:
         this.uiLblProjectState.classList.add('bg-success');
-        this.uiLblProjectState.textContent = "Funded";
+        this.uiLblProjectState.textContent = "Accepted";
         break;
       case 2:
         this.uiLblProjectState.classList.add('bg-warning');
-        this.uiLblProjectState.textContent = "Started";
+        this.uiLblProjectState.textContent = "Closed";
         break;
-      case 3:
-        this.uiLblProjectState.classList.add('bg-info');
-        this.uiLblProjectState.textContent = "Approved";
-        break;        
-      case 4:
-        this.uiLblProjectState.classList.add('bg-light');
-        this.uiLblProjectState.textContent = "Released";
-        break;  
     }
+  },
+
+  utilAddScheduleToTable: function(shortcode, description, value, state){
+    let tr;
+    let td; 
+
+    this.uiTblScheduleTableBody = document.getElementById("schedule-table-body");    
+    tr = document.createElement("tr");
+    td = document.createElement("td");
+    td.innerHTML = shortcode;
+    tr.appendChild(td);
+    this.uiTblScheduleTableBody.appendChild(tr);
+
+    td = document.createElement("td");
+    td.innerHTML = description;
+    tr.classList.add("table-active");
+    tr.appendChild(td);
+    this.uiTblScheduleTableBody.appendChild(tr);
+
+    td = document.createElement("td");
+    td.innerHTML = value/1000000000000000000;
+    td.classList.add('text-end');
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    td.innerHTML = this.utilScheduleState(parseInt(state));
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    tr.appendChild(td);
+
+    this.uiTblScheduleTableBody.appendChild(tr);
+  },
+
+  utilRefreshScheduleTable: async function(){
+    this.uiTblScheduleTable = document.getElementById("tbl-schedule-table"); 
+    this.uiTblScheduleTable.classList.remove('d-none');  
+
+    while (this.uiTblScheduleTable.rows[1]){
+      this.uiTblScheduleTable.deleteRow(1);
+    }
+
+    let totalRow;
+
+    await this.freelancerContract.methods.totalSchedules().call().then((result) => {
+      totalRow = result;
+    });
+
+    for (let i=0; i<= totalRow-1; i++){
+      await this.freelancerContract.methods.scheduleRegister(i).call().then((result)=>{
+        this.utilAddScheduleToTable(result["shortCode"], result["description"], result["value"], result["scheduleState"]);
+      });
+    }
+  },
+
+  retrieveFreelancer: async function(ContractAddress){
+    console.log(ContractAddress);
+    const { web3 } = this;
+    this.freelancerContract = new web3.eth.Contract(freelancerArtifact.abi, ContractAddress);
+    console.log(this.freelancerContract);
+    this.uiConContract = document.getElementById("con-contract");
+    this.uiLblContractAddress = document.getElementById("lbl-contract-address");
+    this.uiLblFreelancerAddress = document.getElementById("lbl-freelancer-address");
+
+    this.uiConContract.classList.remove('d-none');
+
+      this.uiLblContractAddress.textContent = ContractAddress;
+      this.freelancerContract.methods.freelancerAddress().call().then((result) =>{
+        this.uiLblFreelancerAddress.textContent = result;
+      });
+
+      this.freelancerContract.methods.projectState().call().then((result) =>{
+        this.utilProjectStatus(0);
+      });
+
+      this.utilRefreshScheduleTable();
   },
 
   deployFreelancer: async function() {
@@ -106,28 +217,10 @@ const App = {
       this.freelancerContract.methods.projectState().call().then((result) =>{
         this.utilProjectStatus(0);
       });
+
+      this.utilRefreshScheduleTable();
+
     })
-  },
-
-  refreshBalance: async function() {
-    const { getBalance } = this.meta.methods;
-    const balance = await getBalance(this.account).call();
-
-    const balanceElement = document.getElementsByClassName("balance")[0];
-    balanceElement.innerHTML = balance;
-  },
-
-  sendCoin: async function() {
-    const amount = parseInt(document.getElementById("amount").value);
-    const receiver = document.getElementById("receiver").value;
-
-    this.setStatus("Initiating transaction... (please wait)");
-
-    const { sendCoin } = this.meta.methods;
-    await sendCoin(receiver, amount).send({ from: this.account });
-
-    this.setStatus("Transaction complete!");
-    this.refreshBalance();
   },
 
   setStatus: function(message) {
